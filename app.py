@@ -85,6 +85,7 @@ def analyze():
 
         # EVALUACIÓN
         evaluation_prompt = stage_module.evaluate_input_prompt(user_input)
+        print("🔍 Ejecutando openai_client.chat.completions.create")
         eval_response = openai_client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": evaluation_prompt}],
@@ -105,7 +106,8 @@ def analyze():
         classification = feedback_json.get("clasificacion", "neutral")
         puntaje = feedback_json.get("puntaje", 0)
         reply_prompt = stage_module.generate_reply_prompt(user_input, classification, puntaje)
-
+        
+        print("🔁 Ejecutando respuesta del compañero")
         reply_response = openai_client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": reply_prompt}],
