@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Caso 1: El compañero desordenado</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    textarea {
+      width: 100%;
+      font-size: 16px;
+      padding: 10px;
+      box-sizing: border-box;
+      resize: vertical;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #feedback, #reporteFinal {
+      background-color: #f9f9f9;
+      padding: 15px;
+      border-radius: 5px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      margin-top: 20px;
+      border: 1px solid #ddd;
+    }
+
+    #stage {
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+
+    .descripcion {
+      background-color: #eef4ff;
+      padding: 10px;
+      border-left: 5px solid #447;
+      margin-bottom: 20px;
+    }
+
+    .objetivo-etapa {
+      background-color: #fff7e6;
+      padding: 10px;
+      border-left: 5px solid #e69f00;
+      margin-bottom: 20px;
+    }
+
+    .tarjeta-companero {
+      padding: 15px;
+      border-radius: 8px;
+      border: 2px solid #ccc;
+      margin-top: 20px;
+      background-color: #f9f9f9;
+      transition: border 0.3s, background-color 0.3s;
+    }
+
+    .tarjeta-companero.positivo {
+      border-color: #2ecc71;
+      background-color: #f0fff5;
+    }
+
+    .tarjeta-companero.negativo {
+      border-color: #e74c3c;
+      background-color: #fff3f3;
+    }
+
+    #imagenCompanero {
+      width: 320px;
+      height: 320px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    /* Oculta bordes y fondo si los contenedores están vacíos */
+    #feedback:empty,
+    #reporteFinal:empty {
+      border: none;
+      padding: 0;
+      background-color: transparent;
+    }
+  </style>
+</head>
+<body>
+  <h2>Caso 1: El compañero desordenado</h2>
+
+  {% if stage_name == "Preparación y apertura" %}
+  <div class="descripcion">
+    <p><strong>Situación:</strong> Un compañero de trabajo deja su escritorio y la oficina muy desordenados. Tu objetivo es pedirle que mantenga más el orden sin generar conflicto.</p>
+  </div>
+  {% endif %}
+
+  <div id="stage">Etapa actual: <span id="stageName">{{ stage_name }}</span></div>
+
+  <div class="objetivo-etapa">
+    <p><strong>🎯 Objetivo de esta etapa:</strong> {{ stage_description }}</p>
+  </div>
+
+  <textarea id="userMessage" rows="5" placeholder="Escribí tu frase aquí..."></textarea><br>
+  <button id="enviarBtn" onclick="sendMessage()">Enviar</button>
+
+  <div id="userInputDisplay" style="margin-top: 20px;"></div>
+
+  <div id="respuestaBot" class="tarjeta-companero" style="display:none;">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <img id="imagenCompanero" src="" alt="Compañero">
+      <div>
+        <strong>🧑‍💼 Respuesta del compañero:</strong>
+        <p id="textoCompanero" style="margin-top: 5px;"></p>
+      </div>
+    </div>
+  </div>
+
+  <div id="feedback"></div>
+
+  <button id="actionBtn" onclick="accionEtapa()" style="display:none; margin-top: 10px;">Siguiente etapa</button>
+  <button onclick="reiniciarPractica()" style="margin-top: 20px;">Reiniciar práctica</button>
+  <div id="reporteFinal" style="margin-top: 20px;"></div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
