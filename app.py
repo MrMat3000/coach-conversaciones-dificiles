@@ -88,7 +88,7 @@ def analyze():
             temperature=0.4
         )
 
-        eval_raw = eval_response.choices[0].message.content.strip()
+        eval_raw = eval_response["choices"][0]["message"]["content"].strip()
         try:
             feedback_json = json.loads(eval_raw)
         except json.JSONDecodeError:
@@ -107,7 +107,7 @@ def analyze():
             messages=[{"role": "user", "content": reply_prompt}],
             temperature=0.7
         )
-        reply_text = reply_response.choices[0].message.content.strip()
+        reply_text = reply_response["choices"][0]["message"]["content"].strip()
         feedback_json["respuesta_companero"] = reply_text
 
         dialogue = session.get('dialogue', [])
