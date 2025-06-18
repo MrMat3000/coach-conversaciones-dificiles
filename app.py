@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, render_template, session
-from openai import OpenAI
+import openai
 import os
 from dotenv import load_dotenv
 import json
@@ -9,7 +9,7 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret")
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 STAGES = [
     "Preparación y apertura",
@@ -82,7 +82,7 @@ def analyze():
 
     try:
         evaluation_prompt = stage_module.evaluate_input_prompt(user_input)
-        eval_response = client.chat.completions.create(
+        eval_response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": evaluation_prompt}],
             temperature=0.4
@@ -102,7 +102,7 @@ def analyze():
         puntaje = feedback_json.get("puntaje", 0)
         reply_prompt = stage_module.generate_reply_prompt(user_input, classification, puntaje)
 
-        reply_response = client.chat.completions.create(
+        reply_response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": reply_prompt}],
             temperature=0.7
