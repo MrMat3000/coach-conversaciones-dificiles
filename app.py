@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, render_template, session
-from openai import OpenAI
+import openai
 import os
 from dotenv import load_dotenv
 import json
@@ -9,7 +9,7 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret")
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 STAGES = [
     "Preparación y apertura",
@@ -28,7 +28,6 @@ STAGE_OBJECTIVES = [
 ]
 
 def get_stage_module(stage_index):
-    # Lista de nombres de archivos por etapa
     module_names = [
         "stage_0_preparacion",
         "stage_1_descripcion",
@@ -41,7 +40,6 @@ def get_stage_module(stage_index):
     except (IndexError, ModuleNotFoundError) as e:
         print(f"❌ Error al cargar módulo para la etapa {stage_index}: {e}")
         return None
-
 
 def calcular_promedio_puntaje(feedback_json):
     criterios = feedback_json.get("criterios", {})
@@ -85,7 +83,7 @@ def analyze():
     try:
         # EVALUACIÓN
         evaluation_prompt = stage_module.evaluate_input_prompt(user_input)
-        eval_response = client.chat.completions.create(
+        eval_response = openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": evaluation_prompt}],
             temperature=0.4
@@ -101,19 +99,18 @@ def analyze():
         if feedback_json.get("puntaje", 0) < 6:
             feedback_json["cumple_objetivo"] = False
 
-        # STEP 2 — RESPUESTA DEL COMPAÑERO
+        # RESPUESTA DEL COMPAÑERO
         classification = feedback_json.get("clasificacion", "neutral")
         puntaje = feedback_json.get("puntaje", 0)
         reply_prompt = stage_module.generate_reply_prompt(user_input, classification, puntaje)
 
-        reply_response = client.chat.completions.create(
+        reply_response = openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": reply_prompt}],
             temperature=0.7
         )
         reply_text = reply_response.choices[0].message.content.strip()
         feedback_json["respuesta_companero"] = reply_text
-
 
         dialogue = session.get('dialogue', [])
         dialogue.append({
