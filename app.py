@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 import json
 import importlib
 
-
 load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret")
@@ -82,9 +81,11 @@ def analyze():
         return jsonify({"error": f"No se encontró la lógica para la etapa {stage}"}), 500
 
     try:
+        openai_client = openai.OpenAI()
+
         # EVALUACIÓN
         evaluation_prompt = stage_module.evaluate_input_prompt(user_input)
-        eval_response = openai.chat.completions.create(
+        eval_response = openai_client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": evaluation_prompt}],
             temperature=0.4
@@ -105,7 +106,7 @@ def analyze():
         puntaje = feedback_json.get("puntaje", 0)
         reply_prompt = stage_module.generate_reply_prompt(user_input, classification, puntaje)
 
-        reply_response = openai.chat.completions.create(
+        reply_response = openai_client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": reply_prompt}],
             temperature=0.7
