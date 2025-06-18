@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, render_template, session
-import openai
+import httpx
 import os
 from dotenv import load_dotenv
 import json
@@ -9,7 +9,8 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret")
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions"
 
 STAGES = [
     "Preparación y apertura",
@@ -58,6 +59,25 @@ def calcular_promedio_puntaje(feedback_json):
     feedback_json["puntaje"] = promedio
     return feedback_json
 
+def call_openai(prompt, temperature):
+    headers = {
+        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "model": "gpt-3.5-turbo",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": temperature
+    }
+
+    try:
+        response = httpx.post(OPENAI_ENDPOINT, headers=headers, json=data, timeout=30)
+        response.raise_for_status()
+        return response.json()["choices"][0]["message"]["content"].strip()
+    except Exception as e:
+        print(f"❌ Error en llamada a OpenAI: {e}")
+        raise
+
 @app.route("/")
 def index():
     if 'stage' not in session:
@@ -81,18 +101,10 @@ def analyze():
         return jsonify({"error": f"No se encontró la lógica para la etapa {stage}"}), 500
 
     try:
-        openai_client = openai.OpenAI()
-
         # EVALUACIÓN
         evaluation_prompt = stage_module.evaluate_input_prompt(user_input)
-        print("🔍 Ejecutando openai_client.chat.completions.create")
-        eval_response = openai_client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": evaluation_prompt}],
-            temperature=0.4
-        )
+        eval_raw = call_openai(evaluation_prompt, temperature=0.4)
 
-        eval_raw = eval_response.choices[0].message.content.strip()
         try:
             feedback_json = json.loads(eval_raw)
         except json.JSONDecodeError:
@@ -106,14 +118,7 @@ def analyze():
         classification = feedback_json.get("clasificacion", "neutral")
         puntaje = feedback_json.get("puntaje", 0)
         reply_prompt = stage_module.generate_reply_prompt(user_input, classification, puntaje)
-        
-        print("🔁 Ejecutando respuesta del compañero")
-        reply_response = openai_client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": reply_prompt}],
-            temperature=0.7
-        )
-        reply_text = reply_response.choices[0].message.content.strip()
+        reply_text = call_openai(reply_prompt, temperature=0.7)
         feedback_json["respuesta_companero"] = reply_text
 
         dialogue = session.get('dialogue', [])
