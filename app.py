@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import json
 import importlib
 
+
 load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret")
